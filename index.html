@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vielen Dank – Sie haben Türen geöffnet</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;min-height:100vh;font-family:'Georgia',serif;overflow-x:hidden;background:#0d0b07;cursor:pointer;}
+
+#music-btn{
+  position:fixed;bottom:20px;right:20px;z-index:999;
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(200,168,74,.15);border:1.5px solid rgba(200,168,74,.4);
+  color:#c8a84a;font-size:20px;cursor:pointer;
+  display:none;align-items:center;justify-content:center;
+  transition:background .3s,transform .2s;
+}
+#music-btn:hover{background:rgba(200,168,74,.3);transform:scale(1.1);}
+#music-btn.visible{display:flex;}
+
+#prison-scene{
+  position:fixed;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at center,#18120a 0%,#0a0805 100%);
+  z-index:100;transition:opacity 1.8s ease;
+}
+.prison-wall{
+  position:absolute;inset:0;
+  background:
+    repeating-linear-gradient(90deg,transparent,transparent 58px,rgba(60,40,15,.15) 58px,rgba(60,40,15,.15) 62px),
+    repeating-linear-gradient(0deg,transparent,transparent 38px,rgba(60,40,15,.10) 38px,rgba(60,40,15,.10) 42px),
+    radial-gradient(ellipse at 50% 30%,#201608 0%,#0d0b07 100%);
+}
+.intro-text{position:relative;z-index:2;color:#7a6030;font-size:clamp(11px,2.2vw,15px);letter-spacing:.3em;text-transform:uppercase;margin-bottom:clamp(16px,3vh,32px);text-align:center;padding:0 20px;font-style:italic;}
+.door-wrap{position:relative;z-index:2;width:clamp(200px,36vw,360px);height:clamp(320px,58vh,560px);perspective:1600px;}
+.door-frame{position:absolute;inset:-16px -18px -4px -18px;border:12px solid #3a2510;border-bottom:none;box-shadow:inset 0 0 30px rgba(0,0,0,.9),0 0 60px rgba(0,0,0,.95);}
+.door-light-behind{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse at 15% 50%,rgba(255,235,160,.95) 0%,rgba(255,200,80,.4) 35%,transparent 70%);opacity:0;transition:opacity 1.4s ease;pointer-events:none;}
+.door-panel{position:absolute;inset:0;background:linear-gradient(140deg,#2e1e0a 0%,#3d2a10 45%,#271808 100%);transform-origin:left center;transform-style:preserve-3d;transition:transform 1.3s cubic-bezier(.4,0,.2,1);z-index:5;}
+.door-panel::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 17px,rgba(0,0,0,.1) 17px,rgba(0,0,0,.1) 19px);}
+.door-inset{position:absolute;border:3px solid #1a1005;box-shadow:inset 0 0 10px rgba(0,0,0,.6);background:rgba(0,0,0,.18);}
+.di-top{top:10%;left:8%;right:8%;height:27%;} .di-bot{top:44%;left:8%;right:8%;height:48%;}
+.bars{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden;}
+.bar{position:absolute;top:0;bottom:0;width:clamp(7px,1.4vw,11px);background:linear-gradient(90deg,#252525 0%,#585858 35%,#6a6a6a 50%,#484848 70%,#252525 100%);border-radius:2px;}
+.bar:nth-child(1){left:9%;} .bar:nth-child(2){left:23%;} .bar:nth-child(3){left:37%;}
+.bar:nth-child(4){left:51%;} .bar:nth-child(5){left:65%;} .bar:nth-child(6){left:79%;}
+.bar-h{position:absolute;left:0;right:0;height:clamp(6px,1.1vw,9px);background:linear-gradient(180deg,#252525,#545454,#454545);border-radius:2px;}
+.bh1{top:19%;} .bh2{top:64%;}
+.door-lock{position:absolute;right:11%;top:50%;transform:translateY(-50%);z-index:7;}
+.lock-plate{width:clamp(18px,3.5vw,28px);height:clamp(28px,5vw,40px);background:linear-gradient(135deg,#7a6030,#c8a84a,#7a6030);border-radius:3px;box-shadow:0 2px 8px rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;}
+.lock-hole{width:7px;height:7px;background:#1a1005;border-radius:50%;transition:box-shadow .3s;}
+.lock-hole.glow{box-shadow:0 0 10px 4px rgba(255,200,80,.7);background:#2a1800;}
+.door-panel.s1{transform:perspective(1600px) rotateY(-38deg);}
+.door-panel.s2{transform:perspective(1600px) rotateY(-72deg);}
+.door-panel.s3{transform:perspective(1600px) rotateY(-108deg);}
+.door-panel.s1~.door-light-behind{opacity:.25;}
+.door-panel.s2~.door-light-behind{opacity:.65;}
+.door-panel.s3~.door-light-behind{opacity:1;}
+.click-hint{position:relative;z-index:2;margin-top:clamp(18px,3.5vh,36px);color:#6a5530;font-size:clamp(11px,2vw,14px);letter-spacing:.2em;text-transform:uppercase;text-align:center;padding:0 20px;animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+.click-dots{position:relative;z-index:2;margin-top:12px;display:flex;gap:8px;justify-content:center;}
+.cdot{width:8px;height:8px;border-radius:50%;border:1px solid #6a5530;background:transparent;transition:background .4s,border-color .4s;}
+.cdot.filled{background:#c8a84a;border-color:#c8a84a;}
+
+#confetti-canvas{position:fixed;inset:0;z-index:200;pointer-events:none;opacity:0;}
+
+#reveal-scene{
+  position:fixed;inset:0;z-index:150;
+  background:linear-gradient(160deg,#fffbf0 0%,#fdf0c0 40%,#f5e080 100%);
+  opacity:0;pointer-events:none;transition:opacity 1.8s ease;
+  overflow-y:auto;overflow-x:hidden;cursor:default;
+}
+#reveal-scene.visible{opacity:1;pointer-events:all;}
+.reveal-inner{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:clamp(24px,5vh,60px) clamp(16px,4vw,48px);gap:clamp(24px,4vh,48px);}
+.rays{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.ray{position:absolute;top:0;left:50%;width:2px;height:100%;background:linear-gradient(180deg,rgba(255,240,160,.5) 0%,transparent 70%);transform-origin:top center;animation:sway var(--rd,4s) ease-in-out infinite alternate;opacity:.3;}
+@keyframes sway{0%{opacity:.2;transform:rotate(var(--r)) scaleX(1);}100%{opacity:.5;transform:rotate(calc(var(--r)+4deg)) scaleX(1.6);}}
+.headline{position:relative;z-index:2;text-align:center;opacity:0;transform:translateY(24px);transition:opacity 1s ease,transform 1s ease;}
+.headline.show{opacity:1;transform:none;}
+.headline h1{font-size:clamp(22px,5vw,46px);color:#2a1800;font-weight:normal;font-style:italic;line-height:1.25;margin-bottom:12px;}
+.headline p{font-size:clamp(13px,2vw,17px);color:#6a4a18;max-width:600px;margin:0 auto;line-height:1.75;}
+.persons{position:relative;z-index:2;display:flex;gap:clamp(16px,4vw,52px);align-items:flex-start;justify-content:center;flex-wrap:wrap;width:100%;max-width:960px;}
+.pcard{display:flex;flex-direction:column;align-items:center;gap:12px;opacity:0;transform:translateY(36px) scale(.94);transition:opacity 1s ease,transform 1s ease;max-width:280px;}
+.pcard.show{opacity:1;transform:none;}
+.pcard img{width:clamp(130px,25vw,230px);height:clamp(130px,25vw,230px);border-radius:50%;object-fit:cover;object-position:top center;border:5px solid rgba(255,255,255,.95);box-shadow:0 0 0 2px rgba(200,168,74,.5),0 10px 50px rgba(160,100,0,.25);}
+.pcard-name{font-size:clamp(15px,2.8vw,21px);color:#2a1800;font-style:italic;text-align:center;}
+.pcard-detail{font-size:clamp(11px,1.7vw,14px);color:#7a5020;text-align:center;line-height:1.55;max-width:200px;}
+.vcard{position:relative;z-index:2;width:100%;max-width:580px;opacity:0;transform:translateY(36px);transition:opacity 1.2s ease,transform 1.2s ease;}
+.vcard.show{opacity:1;transform:none;}
+.vcard-label{text-align:center;font-size:clamp(15px,2.5vw,19px);color:#2a1800;font-style:italic;margin-bottom:14px;}
+.vcard-sub{text-align:center;font-size:clamp(11px,1.7vw,13px);color:#9a7030;margin-bottom:16px;letter-spacing:.05em;}
+.vcard video{width:100%;border-radius:16px;border:4px solid rgba(255,255,255,.8);box-shadow:0 12px 48px rgba(160,100,0,.2),0 0 0 1px rgba(200,168,74,.3);display:block;}
+.danke-block{position:relative;z-index:2;text-align:center;opacity:0;transform:scale(.88);transition:opacity 1.2s ease .4s,transform 1.2s ease .4s;padding-bottom:clamp(24px,5vh,56px);}
+.danke-block.show{opacity:1;transform:scale(1);}
+.danke-main{font-size:clamp(26px,7vw,64px);color:#1a1000;font-style:italic;line-height:1;margin-bottom:14px;}
+.danke-sub{font-size:clamp(12px,2vw,15px);color:#9a7030;letter-spacing:.15em;text-transform:uppercase;line-height:1.8;}
+.danke-hearts{font-size:clamp(18px,3vw,24px);margin-top:10px;color:#c8603a;}
+.particle{position:fixed;pointer-events:none;border-radius:50%;animation:float-p var(--pd,5s) var(--py,0s) ease-in-out infinite alternate;}
+@keyframes float-p{0%{transform:translateY(0) scale(1);opacity:.15;}100%{transform:translateY(-28px) scale(1.4);opacity:.5;}}
+.bird-svg{position:fixed;pointer-events:none;opacity:0;animation:fly var(--bd,4s) var(--by,0s) ease-out forwards;}
+@keyframes fly{0%{opacity:0;transform:translate(0,0) scale(.3);}15%{opacity:1;}85%{opacity:.7;}100%{opacity:0;transform:translate(var(--bx,0),var(--bby,-400px)) scale(1.1);}}
+@media(max-width:520px){.persons{flex-direction:column;align-items:center;}.pcard img{width:140px;height:140px;}}
+</style>
+</head>
+<body>
+
+<!-- Audio loaded from separate file -->
+<audio id="bg-music" loop preload="none">
+  <source src="leberch-inspiring-511351.mp3" type="audio/mpeg">
+</audio>
+
+<div id="music-btn" title="Musik an/aus" onclick="toggleMusic()">♪</div>
+
+<div id="prison-scene" onclick="handleClick()">
+  <div class="prison-wall"></div>
+  <div class="intro-text">Eine Geschichte der Freiheit</div>
+  <div class="door-wrap">
+    <div class="door-frame"></div>
+    <div class="door-light-behind"></div>
+    <div class="door-panel" id="door-panel">
+      <div class="door-inset di-top"></div>
+      <div class="door-inset di-bot"></div>
+      <div class="bars">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar-h bh1"></div><div class="bar-h bh2"></div>
+      </div>
+      <div class="door-lock">
+        <div class="lock-plate"><div class="lock-hole" id="lock-hole"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="click-hint" id="click-hint">Klicken Sie, um die Tür zu öffnen</div>
+  <div class="click-dots">
+    <div class="cdot" id="d0"></div>
+    <div class="cdot" id="d1"></div>
+    <div class="cdot" id="d2"></div>
+  </div>
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div id="reveal-scene">
+  <div class="rays" id="rays"></div>
+  <div id="birds-layer" style="position:fixed;inset:0;pointer-events:none;z-index:10;overflow:hidden;"></div>
+  <div class="reveal-inner">
+    <div class="headline" id="hl">
+      <h1>Das haben Sie ermöglicht</h1>
+      <p>Durch Ihre Großzügigkeit und Menschlichkeit — als Mütter, Väter und Menschen mit Mitgefühl — haben echte Menschen ihre Freiheit zurückgewonnen.</p>
+    </div>
+    <div class="persons">
+      <div class="pcard" id="pc-k">
+        <img src="Kaziveh_Parviznia.png" alt="Kaziveh Parviznia">
+        <div class="pcard-name">Kaziveh Parviznia</div>
+        <div class="pcard-detail">Freiheit ist kein Privileg —<br>sie ist ein Menschenrecht.</div>
+      </div>
+      <div class="pcard" id="pc-m">
+        <img src="mehrdad_garivani.jpg" alt="Mehrdad Garivani">
+        <div class="pcard-name">Mehrdad Garivani</div>
+        <div class="pcard-detail">Zurück bei seiner Familie —<br>dank Menschen wie Ihnen.</div>
+      </div>
+    </div>
+    <div class="vcard" id="vc-f">
+      <div class="vcard-label">Und Fardin Atefat</div>
+      <div class="vcard-sub">Auch seine Geschichte wurde durch Ihre Unterstützung möglich</div>
+      <video controls playsinline preload="metadata" src="fardin_atefat.mp4"></video>
+    </div>
+    <div class="danke-block" id="danke">
+      <div class="danke-main">Vielen Dank</div>
+      <div class="danke-sub">
+        Von Müttern und Vätern, die wieder mit ihren Kindern zusammen sind<br>
+        Von Familien, die wieder vollständig sind<br>
+        Ihre Menschlichkeit verändert Leben — und viele weitere werden folgen
+      </div>
+      <div class="danke-hearts">♥ ♥ ♥</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const audio = document.getElementById('bg-music');
+let musicPlaying = false;
+
+function fadeIn(el, duration) {
+  el.volume = 0;
+  el.play().catch(()=>{});
+  const step = 0.05 / (duration / 200);
+  const iv = setInterval(() => {
+    el.volume = Math.min(1, el.volume + step);
+    if (el.volume >= 1) clearInterval(iv);
+  }, 200);
+}
+
+function toggleMusic() {
+  if (musicPlaying) {
+    audio.pause(); musicPlaying = false;
+    document.getElementById('music-btn').textContent = '♪';
+  } else {
+    audio.play(); musicPlaying = true;
+    document.getElementById('music-btn').textContent = '‖';
+  }
+}
+
+function startMusic() {
+  fadeIn(audio, 3000);
+  musicPlaying = true;
+  const btn = document.getElementById('music-btn');
+  btn.classList.add('visible');
+  btn.textContent = '‖';
+}
+
+let clicks = 0;
+const panel = document.getElementById('door-panel');
+const lock  = document.getElementById('lock-hole');
+const hint  = document.getElementById('click-hint');
+const pScene = document.getElementById('prison-scene');
+const rScene = document.getElementById('reveal-scene');
+
+function handleClick() {
+  if (clicks >= 3) return;
+  clicks++;
+  lock.classList.add('glow');
+  setTimeout(() => lock.classList.remove('glow'), 450);
+  document.getElementById('d'+(clicks-1)).classList.add('filled');
+  if (clicks === 1) {
+    panel.classList.add('s1');
+    hint.textContent = 'Noch einmal öffnen…';
+  } else if (clicks === 2) {
+    panel.classList.remove('s1'); panel.classList.add('s2');
+    hint.textContent = 'Fast offen…';
+  } else {
+    panel.classList.remove('s2'); panel.classList.add('s3');
+    hint.style.opacity = '0';
+    setTimeout(openReveal, 1500);
+  }
+}
+
+function openReveal() {
+  startMusic();
+  startConfetti();
+  pScene.style.opacity = '0';
+  setTimeout(() => { pScene.style.display = 'none'; }, 1800);
+  rScene.classList.add('visible');
+  buildRays();
+  buildParticles();
+  setTimeout(() => document.getElementById('hl').classList.add('show'), 500);
+  setTimeout(() => document.getElementById('pc-k').classList.add('show'), 900);
+  setTimeout(() => document.getElementById('pc-m').classList.add('show'), 1400);
+  setTimeout(() => document.getElementById('vc-f').classList.add('show'), 2000);
+  setTimeout(() => document.getElementById('danke').classList.add('show'), 2800);
+  setTimeout(launchBirds, 1200);
+}
+
+function startConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  canvas.style.opacity = '1';
+  const ctx = canvas.getContext('2d');
+  const shapes = ['🌸','🌺','🌼','🌻','💐','🌹','🌷','💮'];
+  const pieces = [];
+  for (let i = 0; i < 140; i++) {
+    pieces.push({
+      x: Math.random()*canvas.width, y: -30-Math.random()*500,
+      vx: (Math.random()-.5)*3.5, vy: 1.5+Math.random()*3.5,
+      rot: Math.random()*360, rotV: (Math.random()-.5)*5,
+      size: 14+Math.random()*20,
+      shape: shapes[Math.floor(Math.random()*shapes.length)],
+      opacity: .7+Math.random()*.3,
+    });
+  }
+  let frame = 0; const maxF = 240;
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p => {
+      ctx.save();
+      ctx.globalAlpha = p.opacity * Math.max(0,1-frame/maxF);
+      ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.font = p.size+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(p.shape,0,0); ctx.restore();
+      p.x+=p.vx; p.y+=p.vy; p.rot+=p.rotV; p.vy+=.05;
+    });
+    frame++;
+    if (frame<maxF) requestAnimationFrame(draw);
+    else { ctx.clearRect(0,0,canvas.width,canvas.height); canvas.style.opacity='0'; }
+  }
+  draw();
+}
+
+function buildRays() {
+  const c = document.getElementById('rays');
+  [-70,-50,-35,-18,-5,5,18,35,50,70,-85,85].forEach((a,i) => {
+    const r = document.createElement('div'); r.className='ray';
+    r.style.setProperty('--r',a+'deg'); r.style.setProperty('--rd',(3.5+i*.4)+'s');
+    r.style.width=(1.5+Math.random()*3)+'px'; r.style.animationDelay=(i*.25)+'s';
+    c.appendChild(r);
+  });
+}
+
+function buildParticles() {
+  const colors=['rgba(200,168,74,.5)','rgba(255,200,80,.4)','rgba(245,226,160,.5)'];
+  for (let i=0;i<28;i++) {
+    const p=document.createElement('div'); p.className='particle';
+    const sz=3+Math.random()*7;
+    p.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;background:${colors[i%3]};--pd:${3+Math.random()*5}s;--py:${Math.random()*3}s;`;
+    rScene.appendChild(p);
+  }
+}
+
+function launchBirds() {
+  const layer=document.getElementById('birds-layer');
+  const bSVG=`<svg viewBox="0 0 50 24" xmlns="http://www.w3.org/2000/svg"><path d="M25,12 Q18,4 10,9 Q18,7 25,12 Q32,7 40,9 Q32,4 25,12" fill="none" stroke="#5a3a10" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+  [
+    {dx:'-260px',dy:'-340px',dur:4.0,delay:0,sz:36},{dx:'220px',dy:'-400px',dur:4.4,delay:.3,sz:30},
+    {dx:'-180px',dy:'-460px',dur:4.8,delay:.6,sz:40},{dx:'300px',dy:'-360px',dur:3.8,delay:.9,sz:26},
+    {dx:'-60px',dy:'-490px',dur:5.1,delay:1.2,sz:34},{dx:'160px',dy:'-420px',dur:4.2,delay:1.5,sz:28},
+    {dx:'-310px',dy:'-310px',dur:5.0,delay:1.8,sz:24},{dx:'340px',dy:'-450px',dur:4.1,delay:2.0,sz:38},
+    {dx:'80px',dy:'-500px',dur:5.4,delay:2.3,sz:30},{dx:'-230px',dy:'-380px',dur:4.6,delay:2.6,sz:32},
+    {dx:'260px',dy:'-320px',dur:4.3,delay:2.9,sz:22},{dx:'-100px',dy:'-520px',dur:4.9,delay:3.2,sz:36},
+  ].forEach(b => {
+    const el=document.createElement('div'); el.className='bird-svg';
+    el.style.left='50%'; el.style.top='52%';
+    el.style.width=b.sz+'px'; el.style.height=(b.sz*.5)+'px';
+    el.style.setProperty('--bd',b.dur+'s'); el.style.setProperty('--by',b.delay+'s');
+    el.style.setProperty('--bx',b.dx); el.style.setProperty('--bby',b.dy);
+    el.innerHTML=bSVG;
+    el.querySelector('svg').setAttribute('width',b.sz);
+    el.querySelector('svg').setAttribute('height',b.sz*.5);
+    layer.appendChild(el);
+  });
+}
+
+window.addEventListener('resize', () => {
+  const c=document.getElementById('confetti-canvas');
+  c.width=window.innerWidth; c.height=window.innerHeight;
+});
+</script>
+</body>
+</html>
